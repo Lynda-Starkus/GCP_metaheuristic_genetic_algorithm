@@ -1,6 +1,5 @@
 import networkx as nx
-from gcp_ga import *
-import numpy as np
+from heuristic_gcp import *
 
 
 def parse_line(line): 
@@ -59,7 +58,7 @@ def defineGraph(filename):
     graph = nx.from_numpy_matrix(np.array(from_file(filename)))
     return graph
 
-matrice = [] #Contient la matrice d'adjacence
+graph = [] #Contient la matrice d'adjacence
 
 SUBPLOT_NUM = 211
 TYPE_COMMENT = "c"
@@ -68,66 +67,5 @@ TYPE_EDGE_DESCRIPTOR = "e"
 
 
 dataset = input("Entrer le nom du dataset: ")
-graph = defineGraph(dataset)
+graph = from_file(dataset)
 print(graph)
-
-
-lenchromo=len(graph)
-
-#L'action principale du programme
-i = 0
-optimal=[]
-bestfit=0
-generationslist=[]
-bestgeneration=1
-while(i != generations):
-    i += 1
-    x=run()
-    generationslist.append(x)
-    run_fit=fitness(x)
-    if (run_fit>bestfit):
-        bestfit=run_fit
-        bestgeneration=i
-    print(f"generation {i} : {x} -----> fitness is : {fitness(x)}")
-
-print(f"optimal generation is : {bestgeneration} fitness rate is : {bestfit} best chromosome is : {generationslist[bestgeneration-1]}" )
-
-
-optimalchromo=generationslist[bestgeneration-1]
-
-colors= {
-        0:"red",
-        1:"blue",
-        2:"yellow",
-        3:"green",
-        4:"orange",
-        5:"black",
-        6:"magenta",
-        7:"white"
-    }
-color_map=[colors[x] for x in optimalchromo]
-print(color_map)
-#ploting
-
-g = nx.Graph()
-g.add_nodes_from(graph.keys())
-for k, v in graph.items():
-    g.add_edges_from(([(k, t) for t in v]))
-
-print (nx.info(g))
-nx.draw(g,node_color = color_map,with_labels = True)
-plt.show()
-
-
-
-'''
-start = time.time()
-coloring, nb_colors = GraphColoring(graph)
-end = time.time()
-print("Temps d'execution = ", (end-start)*1000," milliseconds")
-print(coloring)
-print("Le nombre de couleurs utilisé est = ", nb_colors)
-#nx.draw_networkx(graph,node_color=coloring, with_labels=True)
-nx.draw_circular(graph, font_weight="bold", node_color = coloring, with_labels=True, vmin=0, vmax=max(coloring))
-plt.show()
-'''
