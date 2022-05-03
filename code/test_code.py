@@ -1,5 +1,6 @@
 import networkx as nx
 from gcp_ga import *
+import numpy as np
 
 
 def parse_line(line): 
@@ -72,10 +73,6 @@ print(graph)
 
 
 lenchromo=len(graph)
-popsize=50
-generations=100
-colors=[0,1,2,3,4,5,6,7]
-
 
 #L'action principale du programme
 i = 0

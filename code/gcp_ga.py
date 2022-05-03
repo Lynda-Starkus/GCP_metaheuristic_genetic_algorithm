@@ -3,6 +3,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
+popsize=50
+generations=100
+colors=[0,1,2,3,4,5,6,7]
+
+
 
 def random_population():
   pop = []
