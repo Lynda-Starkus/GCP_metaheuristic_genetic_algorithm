@@ -3,14 +3,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-with open("./graphs/gc_70_9_fit-1") as f:
-    df = pd.read_table(f, header=None, sep=" ")
-    graph= {k:list(v) for k,v in df.groupby(0)[1]}
-print(graph)
-lenchromo=len(graph)
-popsize=50
-generations=100
-colors=[0,1,2,3,4,5,6,7]
 
 def random_population():
   pop = []
@@ -84,46 +76,3 @@ def run():
     population.append(child)
     return child
 
-#L'action principale du programme
-i = 0
-optimal=[]
-bestfit=0
-generationslist=[]
-bestgeneration=1
-while(i != generations):
-    i += 1
-    x=run()
-    generationslist.append(x)
-    run_fit=fitness(x)
-    if (run_fit>bestfit):
-        bestfit=run_fit
-        bestgeneration=i
-    print(f"generation {i} : {x} -----> fitness is : {fitness(x)}")
-
-print(f"optimal generation is : {bestgeneration} fitness rate is : {bestfit} best chromosome is : {generationslist[bestgeneration-1]}" )
-
-
-optimalchromo=generationslist[bestgeneration-1]
-
-colors= {
-        0:"red",
-        1:"blue",
-        2:"yellow",
-        3:"green",
-        4:"orange",
-        5:"black",
-        6:"magenta",
-        7:"white"
-    }
-color_map=[colors[x] for x in optimalchromo]
-print(color_map)
-#ploting
-
-g = nx.Graph()
-g.add_nodes_from(graph.keys())
-for k, v in graph.items():
-    g.add_edges_from(([(k, t) for t in v]))
-
-print (nx.info(g))
-nx.draw(g,node_color = color_map,with_labels = True)
-plt.show()
