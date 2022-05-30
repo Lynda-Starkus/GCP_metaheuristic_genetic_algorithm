@@ -1,71 +1,129 @@
+import random
 import networkx as nx
-from heuristic_gcp import *
+import matplotlib.pyplot as plt
+import pandas as pd
 
-
-def parse_line(line): 
-    if line.startswith(TYPE_COMMENT):
-        return TYPE_COMMENT, None
-    elif line.startswith(TYPE_PROBLEM_LINE):
-        _, _, num_nodes, num_edges = line.split(' ')
-        return TYPE_PROBLEM_LINE, (int(num_nodes), int(num_edges))
-    elif line.startswith(TYPE_EDGE_DESCRIPTOR):
-        _, node1, node2 = line.split(' ')
-        return TYPE_EDGE_DESCRIPTOR, (int(node1), int(node2))
-    else:
-        raise ValueError(f"Unable to parse '{line}'")
-
-
-def from_file(filename): #Contruit la matrice d'adjacence à partir des fichiers fournis
-        matrice = None
-        with open(filename) as f:
-            problem_set = False
-            for line in f.readlines():
-                line_type, val = parse_line(line.strip())
-                if line_type == TYPE_COMMENT:
-                    continue
-                elif line_type == TYPE_PROBLEM_LINE and not problem_set:
-                    num_nodes, num_edges = val
-                    matrice = [ [0 for _ in range(num_nodes)] for _ in range(num_nodes) ]
-                    problem_set = True
-                elif line_type == TYPE_EDGE_DESCRIPTOR:
-                    if not problem_set:
-                        raise RuntimeError("Edge descriptor found before problem line")
-                    node1, node2 = val
-                    matrice[node1-1][node2-1] = 1
-                    matrice[node2-1][node1-1] = 1
-        return matrice
-
-def defineGraph(filename):
-
-    """
-    graph = nx.Graph()
-    add_nodes_from([1, 2, 3, 4])
-    add_edges_from([
-        (1, 2),
-        (1, 3),
-        (1, 4),
-        (2, 1),
-        (2, 3),
-        (2, 4),
-        (3, 1),
-        (3, 2),
-        (3, 4),
-        (4, 1),
-        (4, 2),
-        (4, 3)
-    ])
-    """
-    graph = nx.from_numpy_matrix(np.array(from_file(filename)))
-    return graph
-
-graph = [] #Contient la matrice d'adjacence
-
-SUBPLOT_NUM = 211
-TYPE_COMMENT = "c"
-TYPE_PROBLEM_LINE = "p"
-TYPE_EDGE_DESCRIPTOR = "e"
-
-
-dataset = input("Entrer le nom du dataset: ")
-graph = from_file(dataset)
+with open("./graphs/gc_70_9_fit-1") as f:
+    df = pd.read_table(f, header=None, sep=" ")
+    graph= {k:list(v) for k,v in df.groupby(0)[1]}
 print(graph)
+lenchromo=len(graph)
+popsize=50
+generations=100
+colors=[0,1,2,3,4,5,6,7]
+
+def random_population():
+  pop = []
+  for i in range(popsize):
+    chromo = []
+    for c in range(lenchromo):
+        x=random.choice(colors)
+        chromo.append(x)
+    pop.append(chromo)
+  return pop
+
+def fitness(chromo):
+  fitness = 0
+  for key,value in graph.items():
+      for x in value:
+          if (chromo[x]!=chromo[key]):
+              fitness+=1
+  return fitness
+
+
+def mutate1(chromo):
+    for noeud in range(lenchromo):
+        adjacents=graph.get(noeud)
+        adjacents_colors = []
+        for adjacent in adjacents:
+            adjacents_colors.append(chromo[adjacent])
+            if (chromo[noeud]==chromo[adjacent]):
+                valid_colors=list(set(colors) - set(adjacents_colors))
+                if(len(valid_colors)!=0):
+                    newcolor=random.choice(valid_colors)
+                    chromo[noeud]=newcolor
+                else:
+                    newcolor = random.choice(colors)
+                    chromo[noeud] = newcolor
+    return chromo
+
+def selection1(population):
+    tmpparent1, tmpparent2 =(random.choice(population),random.choice(population))
+    if (fitness(tmpparent1)>fitness(tmpparent2)):
+        parent1=tmpparent1
+    else:
+        parent1=tmpparent2
+    tmpparent1, tmpparent2 = (random.choice(population), random.choice(population))
+    if (fitness(tmpparent1) > fitness(tmpparent2)):
+        parent2 = tmpparent1
+    else:
+        parent2 = tmpparent2
+    return parent1,parent2
+
+def selection2(population):
+    best1=[0]*lenchromo
+    best2=[0]*lenchromo
+    for chromo in population:
+        if(fitness(chromo)>fitness(best1)):
+            best1=chromo
+        if (fitness(chromo)>fitness(best2) and fitness(best2)<fitness(best1)):
+            best2=chromo
+    return best1,best2
+
+def crossover(chromo1,chromo2):
+    pos = random.randint(0,lenchromo)
+    child=chromo1[:pos]+chromo2[pos:]
+    return child
+
+
+def run():
+    population=random_population()
+    parent1,parent2=selection1(population)
+    child=crossover(parent1,parent2)
+    child=mutate1(child)
+    population.append(child)
+    return child
+
+#L'action principale du programme
+i = 0
+optimal=[]
+bestfit=0
+generationslist=[]
+bestgeneration=1
+while(i != generations):
+    i += 1
+    x=run()
+    generationslist.append(x)
+    run_fit=fitness(x)
+    if (run_fit>bestfit):
+        bestfit=run_fit
+        bestgeneration=i
+    print(f"generation {i} : {x} -----> fitness is : {fitness(x)}")
+
+print(f"optimal generation is : {bestgeneration} fitness rate is : {bestfit} best chromosome is : {generationslist[bestgeneration-1]}" )
+
+
+optimalchromo=generationslist[bestgeneration-1]
+
+colors= {
+        0:"red",
+        1:"blue",
+        2:"yellow",
+        3:"green",
+        4:"orange",
+        5:"black",
+        6:"magenta",
+        7:"white"
+    }
+color_map=[colors[x] for x in optimalchromo]
+print(color_map)
+#ploting
+
+g = nx.Graph()
+g.add_nodes_from(graph.keys())
+for k, v in graph.items():
+    g.add_edges_from(([(k, t) for t in v]))
+
+print (nx.info(g))
+nx.draw(g,node_color = color_map,with_labels = True)
+plt.show()
